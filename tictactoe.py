@@ -21,24 +21,24 @@ class Frame:
         self.len = len
         self.gap = gap
         # fmt: off
-        self.points = self.shift_origin([
+        self.points = self.cartesian([
             [self.gap/2, self.len/2], [self.gap/2, -self.len/2],
             [-self.gap/2, self.len/2], [-self.gap/2, -self.len/2],
             [-self.len/2, self.gap/2], [self.len/2, self.gap/2],
             [-self.len/2, -self.gap/2], [self.len/2, -self.gap/2],
-        ], (WIDTH/2, HEIGHT/2))
+        ])
         # fmt: on
 
+    # Convert given list cartesian coordinates to pygame coordinates
     @staticmethod
-    def shift_origin(coords, new_origin):
-        print(coords)
+    def cartesian(coords, new_origin=(WIDTH / 2, HEIGHT / 2)):
         for coord in coords:
-            coord[0] += new_origin[0]
-            coord[1] += new_origin[1]
+            coord[0] = coord[0] + new_origin[0]
+            coord[1] = -coord[1] + new_origin[1]
         return coords
 
     def draw(self):
-        for i in range(0, 7, 2):
+        for i in range(0, len(self.points), 2):
             pygame.draw.line(Main.win, WHITE, self.points[i], self.points[i + 1], 10)
 
 
