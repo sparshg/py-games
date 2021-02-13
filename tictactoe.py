@@ -12,12 +12,17 @@ import pygame
 # Declare some constants and variables
 SIZE = (600, 400)
 FPS = 60
+WHITE = "#f1f1f1"
+BLACK = "#101010"
 
 # The main controller
 class Main:
-    def __init__(self, win):
-        self.running = True
-        self.win = win
+    def __init__(self):
+        pygame.init()
+        pygame.display.set_caption("Tic-Tac-Toe")
+
+        Main.win = pygame.display.set_mode(SIZE)
+        Main.running = True
         self.clock = pygame.time.Clock()
         # dt is the time since last frame, which is ideally 1/FPS
         self.dt = self.clock.tick(FPS)
@@ -25,10 +30,10 @@ class Main:
     def check_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.running = False
+                Main.running = False
 
     def draw(self):
-        self.win.fill("#101010")
+        Main.win.fill(BLACK)
         pygame.display.update()
 
     # The main loop
@@ -38,16 +43,9 @@ class Main:
             self.draw()
             # Calculate dt for next frame
             self.dt = self.clock.tick(FPS)
-
-
-def main():
-    pygame.init()
-    pygame.display.set_caption("Tic-Tac-Toe")
-    win = pygame.display.set_mode(SIZE)
-    Main(win).loop()
-    pygame.quit()
+        pygame.quit()
 
 
 # Test if the script is directly ran
 if __name__ == "__main__":
-    main()
+    Main().loop()
