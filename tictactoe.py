@@ -27,7 +27,7 @@ class Frame:
         self.moves = []
         self.turn = 1
         # fmt: off
-        self.points = self.cartesian([
+        self.points = self.cartesian_to_standard([
             [self.gap/2, self.length/2], [self.gap/2, -self.length/2],
             [-self.gap/2, -self.length/2], [-self.gap/2, self.length/2],
             [-self.length/2, self.gap/2], [self.length/2, self.gap/2],
@@ -35,12 +35,13 @@ class Frame:
         ])
         # fmt: on
         self.rects = []
+        self.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         for i in range(3):
             for j in range(3):
                 self.rects.append(
                     pygame.Rect((-1.5 + 1 * j) * gap, (1.5 - 1 * i) * gap, gap, gap)
                 )
-        self.rects = self.cartesian(self.rects)
+        self.rects = self.cartesian_to_standard(self.rects)
 
         self.animations = [
             Animate(700 + i * 100).line(self.points[i], self.points[i + 1])
@@ -49,19 +50,44 @@ class Frame:
 
     # Convert given list cartesian coordinates to pygame coordinates
     @staticmethod
-    def cartesian(coords, new_origin=(WIDTH / 2, HEIGHT / 2)):
+    def cartesian_to_standard(coords, origin=(WIDTH / 2, HEIGHT / 2)):
         for coord in coords:
-            coord[0] = coord[0] + new_origin[0]
-            coord[1] = -coord[1] + new_origin[1]
+            coord[0] = coord[0] + origin[0]
+            coord[1] = -coord[1] + origin[1]
         return coords
+
+    @staticmethod
+    def standard_to_cartesian(coords, origin=(-WIDTH / 2, HEIGHT / 2)):
+        return Frame.cartesian_to_standard(coords, origin)
 
     def detect_click(self, pos):
         for rect in self.rects:
             if rect.collidepoint(pos):
+                # Spawn O or X
                 self.moves.append(OX(self.turn, rect.center))
-                self.turn = 1 - self.turn
+                # Update the board
+                center = self.standard_to_cartesian([list(rect.center)])[0]
+                index = (1 - int(center[1] / self.gap), int(center[0] / self.gap) + 1)
+                self.board[index[0]][index[1]] = self.turn
                 self.rects.remove(rect)
+                self.turn *= -1
+                # Check if win
+                self.check_win(index)
                 break
+
+    def check_win(self, index):
+        sum = [0, 0, 0, 0]
+        for i in range(3):
+            sum[0] += self.board[index[0]][i]
+            sum[1] += self.board[i][index[1]]
+            sum[2] += self.board[i][i]
+            sum[3] += self.board[2 - i][i]
+        if 3 in sum:
+            print("X Wins")
+            self.rects = []
+        if -3 in sum:
+            print("O Wins")
+            self.rects = []
 
     def draw(self):
         for animation in self.animations:
@@ -76,7 +102,7 @@ class OX:
         self.center = center
         if _type == 1:
             self.animation = Animate(color=ORANGE).cross(center)
-        elif _type == 0:
+        elif _type == -1:
             self.animation = Animate(color=RED).circle(center)
 
     def draw(self):
