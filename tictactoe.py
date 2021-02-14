@@ -14,15 +14,18 @@ from pygame.math import Vector2
 # Declare some constants and variables
 WIDTH, HEIGHT = (600, 400)
 FPS = 60
-WHITE = "#f1f1f1"
+WHITE = "#F1F1F1"
 BLACK = "#101010"
-ORANGE = "#ff6600"
+ORANGE = "#FF6600"
+RED = "#FF1F00"
 
 
 class Frame:
-    def __init__(self, length=320, gap=110):
-        self.length = length
+    def __init__(self, gap=110):
+        self.length = 3 * gap
         self.gap = gap
+        self.moves = []
+        self.turn = 1
         # fmt: off
         self.points = self.cartesian([
             [self.gap/2, self.length/2], [self.gap/2, -self.length/2],
@@ -31,8 +34,16 @@ class Frame:
             [self.length/2, -self.gap/2], [-self.length/2, -self.gap/2],
         ])
         # fmt: on
+        self.rects = []
+        for i in range(3):
+            for j in range(3):
+                self.rects.append(
+                    pygame.Rect((-1.5 + 1 * j) * gap, (1.5 - 1 * i) * gap, gap, gap)
+                )
+        self.rects = self.cartesian(self.rects)
+
         self.animations = [
-            Animate(500 + i * 100).line(self.points[i], self.points[i + 1])
+            Animate(700 + i * 100).line(self.points[i], self.points[i + 1])
             for i in range(0, len(self.points), 2)
         ]
 
@@ -44,14 +55,32 @@ class Frame:
             coord[1] = -coord[1] + new_origin[1]
         return coords
 
+    def detect_click(self, pos):
+        for rect in self.rects:
+            if rect.collidepoint(pos):
+                self.moves.append(OX(self.turn, rect.center))
+                self.turn = 1 - self.turn
+                self.rects.remove(rect)
+                break
+
     def draw(self):
         for animation in self.animations:
             animation.play()
+        for move in self.moves:
+            move.draw()
 
 
 class OX:
-    def __init__(self, _type):
+    def __init__(self, _type, center):
         self.type = _type
+        self.center = center
+        if _type == 1:
+            self.animation = Animate(color=ORANGE).cross(center)
+        elif _type == 0:
+            self.animation = Animate(color=RED).circle(center)
+
+    def draw(self):
+        self.animation.play()
 
 
 class Animate:
@@ -82,7 +111,7 @@ class Animate:
         self.length = self.p.magnitude()
         return self
 
-    def circle(self, center=[WIDTH / 2, HEIGHT / 2], radius=40, width=8):
+    def circle(self, center=[WIDTH / 2, HEIGHT / 2], radius=38, width=8):
         self.type = "circle"
         self.finished = False
         self.width = width
@@ -121,7 +150,9 @@ class Animate:
 
         if not self.finished:
             if pygame.time.get_ticks() < self.final_time and not skip:
-                fraction = (pygame.time.get_ticks() - self.start_time) / self.dur
+                fraction = (
+                    pygame.time.get_ticks() - self.start_time
+                ) / self.dur + 0.001
                 if self.type == "line":
                     self.p.scale_to_length(self.length * self.function(fraction))
                 elif self.type == "circle":
@@ -159,6 +190,8 @@ class Main:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 Main.running = False
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.frame.detect_click(pygame.mouse.get_pos())
 
     def draw(self):
         Main.win.fill(BLACK)
