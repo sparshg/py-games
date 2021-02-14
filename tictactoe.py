@@ -3,7 +3,7 @@
 Github repo can be found here:
 https://github.com/sparshg/pycollab
 """
-from os import X_OK, environ
+from os import environ
 import math
 
 # Hide pygame Hello prompt
