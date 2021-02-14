@@ -10,10 +10,37 @@ environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
 
 # Declare some constants and variables
-SIZE = (600, 400)
+WIDTH, HEIGHT = (600, 400)
 FPS = 60
 WHITE = "#f1f1f1"
 BLACK = "#101010"
+
+
+class Frame:
+    def __init__(self, len=320, gap=110):
+        self.len = len
+        self.gap = gap
+        # fmt: off
+        self.points = self.cartesian([
+            [self.gap/2, self.len/2], [self.gap/2, -self.len/2],
+            [-self.gap/2, self.len/2], [-self.gap/2, -self.len/2],
+            [-self.len/2, self.gap/2], [self.len/2, self.gap/2],
+            [-self.len/2, -self.gap/2], [self.len/2, -self.gap/2],
+        ])
+        # fmt: on
+
+    # Convert given list cartesian coordinates to pygame coordinates
+    @staticmethod
+    def cartesian(coords, new_origin=(WIDTH / 2, HEIGHT / 2)):
+        for coord in coords:
+            coord[0] = coord[0] + new_origin[0]
+            coord[1] = -coord[1] + new_origin[1]
+        return coords
+
+    def draw(self):
+        for i in range(0, len(self.points), 2):
+            pygame.draw.line(Main.win, WHITE, self.points[i], self.points[i + 1], 10)
+
 
 # The main controller
 class Main:
@@ -21,8 +48,10 @@ class Main:
         pygame.init()
         pygame.display.set_caption("Tic-Tac-Toe")
 
-        Main.win = pygame.display.set_mode(SIZE)
+        Main.win = pygame.display.set_mode((WIDTH, HEIGHT))
         Main.running = True
+
+        self.frame = Frame()
         self.clock = pygame.time.Clock()
         # dt is the time since last frame, which is ideally 1/FPS
         self.dt = self.clock.tick(FPS)
@@ -34,6 +63,7 @@ class Main:
 
     def draw(self):
         Main.win.fill(BLACK)
+        self.frame.draw()
         pygame.display.update()
 
     # The main loop
