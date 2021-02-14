@@ -4,6 +4,7 @@ Github repo can be found here:
 https://github.com/sparshg/pycollab
 """
 from os import environ
+import math
 
 # Hide pygame Hello prompt
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
@@ -17,17 +18,21 @@ BLACK = "#101010"
 
 
 class Frame:
-    def __init__(self, len=320, gap=110):
-        self.len = len
+    def __init__(self, length=320, gap=110):
+        self.length = length
         self.gap = gap
         # fmt: off
         self.points = self.cartesian([
-            [self.gap/2, self.len/2], [self.gap/2, -self.len/2],
-            [-self.gap/2, self.len/2], [-self.gap/2, -self.len/2],
-            [-self.len/2, self.gap/2], [self.len/2, self.gap/2],
-            [-self.len/2, -self.gap/2], [self.len/2, -self.gap/2],
+            [self.gap/2, self.length/2], [self.gap/2, -self.length/2],
+            [-self.gap/2, -self.length/2], [-self.gap/2, self.length/2],
+            [-self.length/2, self.gap/2], [self.length/2, self.gap/2],
+            [self.length/2, -self.gap/2], [-self.length/2, -self.gap/2],
         ])
         # fmt: on
+        self.animations = [
+            Animate(500 + i * 100).line(self.points[i], self.points[i + 1])
+            for i in range(0, len(self.points), 2)
+        ]
 
     # Convert given list cartesian coordinates to pygame coordinates
     @staticmethod
@@ -38,8 +43,45 @@ class Frame:
         return coords
 
     def draw(self):
-        for i in range(0, len(self.points), 2):
-            pygame.draw.line(Main.win, WHITE, self.points[i], self.points[i + 1], 10)
+        for animation in self.animations:
+            animation.play()
+
+
+class Animate:
+
+    LINEAR = lambda x: x
+    EASE_OUT_SINE = lambda x: math.sin(math.pi / 2 * x)
+    EASE_IO_SINE = lambda x: 0.5 - math.cos(math.pi * x) / 2
+    EASE_OUT_QUART = lambda x: 1 - pow(1 - x, 4)
+
+    def EASE_IO_QUART(x):
+        return 8 * pow(x, 4) if x < 0.5 else 1 - pow(-2 * x + 2, 4) / 2
+
+    def __init__(self, dur=1000, fn=EASE_OUT_QUART):
+        self.function = fn
+        self.dur = dur
+        self.start_time = pygame.time.get_ticks()
+        self.final_time = self.start_time + dur
+        self.finished = False
+        self.type = None
+
+    def line(self, p1, p2):
+        self.type = "line"
+        self.p1 = pygame.Vector2(p1)
+        self.p2 = pygame.Vector2(p2)
+        self.p = self.p2 - self.p1
+        self.length = self.p.magnitude()
+        return self
+
+    def play(self):
+        if not self.finished and pygame.time.get_ticks() < self.final_time:
+            fraction = (pygame.time.get_ticks() - self.start_time) / self.dur
+            if self.type == "line":
+                self.p.scale_to_length(self.length * self.function(fraction))
+        else:
+            self.p = self.p2 - self.p1
+            self.finished = True
+        pygame.draw.line(Main.win, WHITE, self.p1, self.p + self.p1, 8)
 
 
 # The main controller
@@ -52,9 +94,9 @@ class Main:
         Main.running = True
 
         self.frame = Frame()
-        self.clock = pygame.time.Clock()
+        Main.clock = pygame.time.Clock()
         # dt is the time since last frame, which is ideally 1/FPS
-        self.dt = self.clock.tick(FPS)
+        Main.dt = Main.clock.tick(FPS)
 
     def check_events(self):
         for event in pygame.event.get():
@@ -72,7 +114,7 @@ class Main:
             self.check_events()
             self.draw()
             # Calculate dt for next frame
-            self.dt = self.clock.tick(FPS)
+            Main.dt = Main.clock.tick(FPS)
         pygame.quit()
 
 
