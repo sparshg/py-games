@@ -78,7 +78,15 @@ class Frame:
                 break
 
     def check_win(self, index):
-        # fmt: off
+        def reset():
+            for m in self.moves:
+                for n in m:
+                    if n is not None:
+                        n.wait_and_remove = True
+                        n.remove_time = (
+                            2 * n.blink_count * n.blink_dur + pygame.time.get_ticks()
+                        )
+
         def check(sum, i, j):
             if abs(sum) == 3:
                 self.rects = []
@@ -93,13 +101,9 @@ class Frame:
                     self.moves[i][j].blink = True
                     self.moves[i][j].blink_start = pygame.time.get_ticks()
                     i, j = prev
+                reset()
 
-                for m in self.moves:
-                    for n in m:
-                        if n is not None:
-                            n.wait_and_remove = True
-                            n.remove_time = 2 * n.blink_count * n.blink_dur + pygame.time.get_ticks()
-
+        # fmt: off
         sum = self.board[index[0]][0] + self.board[index[0]][1] + self.board[index[0]][2]
         check(sum, index[0], None)
         sum = self.board[0][index[1]] + self.board[1][index[1]] + self.board[2][index[1]]
@@ -109,6 +113,12 @@ class Frame:
         sum = self.board[2][0] + self.board[1][1] + self.board[0][2]
         check(sum, -2, None)
         # fmt:on
+        tie = 0
+        for i in self.board:
+            if 0 not in i:
+                tie += 1
+        if tie == 3:
+            reset()
 
     def setup_remove(self, dur=500, animate=False):
         if not self.remove:
