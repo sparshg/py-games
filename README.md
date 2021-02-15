@@ -1,2 +1,5 @@
-# pycollab
-small collab with @mtm828
+# Py-Games
+A small collection of games made in pygame
+
+## Tic-Tac-Toe
+![demo](demo/tictactoe.gif)
