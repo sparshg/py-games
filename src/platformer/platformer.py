@@ -5,11 +5,11 @@ https://github.com/sparshg/pycollab
 """
 
 # Import statements
-import pygame as pg
 from os import environ
 
 # Hide pygame Hello prompt
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+import pygame as pg
 
 # Declare some constants and variables
 WIDTH, HEIGHT = (600, 400)
@@ -22,10 +22,11 @@ class Main:
     def __init__(self):
         pg.init()
         pg.display.set_caption("Platformer")
-
         self.running = True
         self.clock = pg.time.Clock()
         self.win = pg.display.set_mode((WIDTH, HEIGHT))
+
+        self.player = Player()
 
     def check_events(self):
         for event in pg.event.get():
@@ -34,21 +35,13 @@ class Main:
 
     # Update things
     def update(self):
-        player.yVel += physics.gravity
-        player.y += player.yVel
-        if player.colliding():
-            while player.colliding():
-                if player.yVel < 0:
-                    pass
-                elif player.yVel > 0:
-                    pass
-            yVel = 0
+        self.player.update()
 
     # Draw things
-    def draw(self):
+    def render(self):
         self.win.fill(BLACK)
-        player.render()
         platforms.render()
+        self.player.render()
         pg.display.update()
 
     # The main loop
@@ -56,28 +49,23 @@ class Main:
         while self.running:
             self.check_events()
             self.update()
-            self.draw()
+            self.render()
             self.clock.tick(FPS)
         pg.quit()
 
 
-main = Main()
-
-
 class Physics:
-    def __init__(self):
-        self.gravity = 2
-        self.jumpHeight = 18
-        self.friction = 2
-        self.acceleration = 4
 
+    gravity = 2
+    jumpHeight = 18
+    friction = 2
+    acceleration = 4
+
+    @staticmethod
     def squareCollision(x1, y1, w1, h1, x2, y2, w2, h2):
         return ((x1 + w1 > x2) and (x1 < x2 + w2)) and (
             (y1 + h1 > y2) and (y1 < y2 + h2)
         )
-
-
-physics = Physics()
 
 
 class Player:
@@ -87,14 +75,22 @@ class Player:
         self.xVel = 0
         self.yVel = 0
 
+    def colliding(self):
+        return False
+
+    def update(self):
+        self.yVel += Physics.gravity
+        self.y += self.yVel
+        if self.colliding():
+            while self.colliding():
+                if self.yVel < 0:
+                    pass
+                elif self.yVel > 0:
+                    pass
+            self.yVel = 0
+
     def render(self):
         pg.draw.rect(main.win, WHITE, (self.x, self.y, 50, 50))
-
-    def colliding(self):
-        pass
-
-
-player = Player()
 
 
 class Platforms:
@@ -112,4 +108,5 @@ platforms = Platforms()
 
 # Test if the script is directly ran
 if __name__ == "__main__":
+    main = Main()
     main.loop()
