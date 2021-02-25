@@ -27,6 +27,7 @@ class Main:
         self.win = pg.display.set_mode((WIDTH, HEIGHT))
 
         self.player = Player()
+        self.platforms = Platforms()
 
     def check_events(self):
         for event in pg.event.get():
@@ -103,8 +104,6 @@ class Platforms:
                 main.win, WHITE, (self.platforms[i].x, self.platforms[i].y, 75, 75)
             )
 
-
-platforms = Platforms()
 
 # Test if the script is directly ran
 if __name__ == "__main__":
