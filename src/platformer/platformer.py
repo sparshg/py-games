@@ -110,7 +110,6 @@ class Player:
                 main.player.yVel = Physics.gravity
 
         # Movement
-
         # Right
         if main.keys.rtArrow:
             main.player.xVel += Physics.acceleration
