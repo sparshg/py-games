@@ -14,12 +14,15 @@ import pygame as pg
 WIDTH, HEIGHT = (600, 400)
 FPS = 60
 BLACK = (0, 0, 0)
+GREY = (225/2, 225/2, 225/2)
 WHITE = (255, 255, 255)
 
 # The main controller
 class Main:
     def __init__(self):
-        Platforms.init()
+        self.platforms = Platforms()
+        self.player = Player()
+        self.keys = Keys()
         pg.init()
         pg.display.set_caption("Platformer")
         self.running = True
@@ -31,25 +34,25 @@ class Main:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 main.running = False
-        keys = pg.key.get_pressed()
-        if keys[pg.K_RIGHT]: Keys.rtArrow = True
-        else: Keys.rtArrow = False
-        if keys[pg.K_LEFT]: Keys.ltArrow = True
-        else: Keys.ltArrow = False
-        if keys[pg.K_UP]: Keys.upArrow = True
-        else: Keys.upArrow = False
-        if keys[pg.K_DOWN]: Keys.dnArrow = True
-        else: Keys.dnArrow = False
+        keyDown = pg.key.get_pressed()
+        if keyDown[pg.K_RIGHT]: self.keys.rtArrow = True
+        else: self.keys.rtArrow = False
+        if keyDown[pg.K_LEFT]: self.keys.ltArrow = True
+        else: self.keys.ltArrow = False
+        if keyDown[pg.K_UP]: self.keys.upArrow = True
+        else: self.keys.upArrow = False
+        if keyDown[pg.K_DOWN]: self.keys.dnArrow = True
+        else: self.keys.dnArrow = False
 
     # Update things
     def update(self):
-        Player.update()
+        self.player.update()
 
     # Draw things
     def render(self):
         self.win.fill(BLACK)
-        Platforms.render()
-        Player.render()
+        self.platforms.render()
+        self.player.render()
         pg.display.update()
 
     # The main loop
@@ -62,10 +65,11 @@ class Main:
         pg.quit()
 
 class Keys:
-    rtArrow = False
-    ltArrow = False
-    upArrow = False
-    dnArrow = False
+    def __init__(self):
+        self.rtArrow = False
+        self.ltArrow = False
+        self.upArrow = False
+        self.dnArrow = False
 
 class Physics:
     gravity = 0.5
@@ -78,60 +82,61 @@ class Physics:
         return x1+w1>x2 and x1<x2+w2 and y1+h1>y2 and y1<y2+h2
 
 class Player:
-    x = 250
-    y = 300
-    xVel = 0
-    yVel = 0
+    def __init__(self):
+        self.x = 250
+        self.y = 300
+        self.xVel = 0
+        self.yVel = 0
 
-    def colliding():
+    def colliding(self):
         for i in range(len(Platforms.platforms)):
-            if Physics.squareCollision(Player.x, Player.y, 50, 50, Platforms.platforms[i].x, Platforms.platforms[i].y, 50, 50):
+            if Physics.squareCollision(main.player.x, main.player.y, 50, 50, main.platforms.platforms[i].x, main.platforms.platforms[i].y, 50, 50):
                 return True
         return False
 
-    def update():
+    def update(self):
         # Gravity
-        Player.yVel += Physics.gravity
-        Player.y += Player.yVel
-        if Player.colliding():
-            while Player.colliding():
-                if Player.yVel < 0:
-                    Player.y += 0.5
-                elif Player.yVel > 0:
-                    Player.y -= 0.5
-            if Keys.upArrow and Player.yVel > 0:
-                Player.yVel = Physics.jumpHeight
+        main.player.yVel += Physics.gravity
+        main.player.y += main.player.yVel
+        if main.player.colliding():
+            while main.player.colliding():
+                if main.player.yVel < 0:
+                    main.player.y += 0.5
+                elif main.player.yVel > 0:
+                    main.player.y -= 0.5
+            if main.keys.upArrow and main.player.yVel > 0:
+                main.player.yVel = Physics.jumpHeight
             else:
-                Player.yVel = Physics.gravity
+                main.player.yVel = Physics.gravity
 
         # Movement
 
         # Right
-        if Keys.rtArrow:
-            Player.xVel += Physics.acceleration
-            if Player.xVel > Physics.maxXVel:
-                Player.xVel = Physics.maxXVel
+        if main.keys.rtArrow:
+            main.player.xVel += Physics.acceleration
+            if main.player.xVel > Physics.maxXVel:
+                main.player.xVel = Physics.maxXVel
 
         # Left
-        if Keys.ltArrow:
-            Player.xVel -= Physics.acceleration
-            if -Player.xVel > Physics.maxXVel:
-                Player.xVel = -Physics.maxXVel
+        if main.keys.ltArrow:
+            main.player.xVel -= Physics.acceleration
+            if -main.player.xVel > Physics.maxXVel:
+                main.player.xVel = -Physics.maxXVel
 
         # Apply friction
-        if Player.xVel > 0:
-            Player.xVel -= Physics.friction
-        if Player.xVel < 0:
-            Player.xVel += Physics.friction
+        if main.player.xVel > 0:
+            main.player.xVel -= Physics.friction
+        if main.player.xVel < 0:
+            main.player.xVel += Physics.friction
 
         # Go back to where you were before if you've hit a wall
-        Player.x += Player.xVel
-        if Player.colliding():
-            Player.x -= Player.xVel
-            Player.xVel = 0
+        main.player.x += main.player.xVel
+        if main.player.colliding():
+            main.player.x -= main.player.xVel
+            main.player.xVel = 0
 
-    def render():
-        pg.draw.rect(main.win, WHITE, (int(Player.x), int(Player.y), 50, 50))
+    def render(self):
+        pg.draw.rect(main.win, GREY, (int(main.player.x), int(main.player.y), 50, 50))
 
 class Platform:
     def __init__(self, x, y):
@@ -144,7 +149,7 @@ class Platforms:
     tiles = [
         [p, p, p, p, p, p, p, p, p, p, p, p],
         [p, _, _, _, _, _, _, _, _, _, _, p],
-        [p, _, _, _, _, p, _, _, _, _, _, p],
+        [p, _, _, _, _, _, _, _, _, _, _, p],
         [p, p, p, _, _, p, _, _, _, _, p, p],
         [p, _, _, _, _, _, _, _, _, _, _, p],
         [p, _, p, _, _, _, p, p, p, p, _, p],
@@ -153,13 +158,13 @@ class Platforms:
     ]
     platforms = []
 
-    def init():
+    def __init__(self):
         for i in range(len(Platforms.tiles)):
             for j in range(len(Platforms.tiles[i])):
                 if Platforms.tiles[i][j] == Platforms.p:
                     Platforms.platforms.append(Platform(j * 50, i * 50))
 
-    def render():
+    def render(self):
         for i in range(len(Platforms.platforms)):
             pg.draw.rect(main.win, WHITE, (Platforms.platforms[i].x, Platforms.platforms[i].y, 50, 50))
 
