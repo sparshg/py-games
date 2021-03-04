@@ -15,6 +15,7 @@ import pygame as pg
 WIDTH, HEIGHT = (600, 400)
 FPS = 60
 BLACK = (0, 0, 0)
+GREY = (225 / 2, 225 / 2, 225 / 2)
 WHITE = (255, 255, 255)
 
 # The main controller
@@ -25,11 +26,11 @@ class Main:
         self.running = True
         self.clock = pg.time.Clock()
         self.win = pg.display.set_mode((WIDTH, HEIGHT))
-
-        self.player = Player()
         self.platforms = Platforms()
+        self.player = Player()
 
-    def check_events(self):
+    # For key press detection and closing the window properly
+    def checkEvents(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 main.running = False
@@ -41,14 +42,14 @@ class Main:
     # Draw things
     def render(self):
         self.win.fill(BLACK)
-        platforms.render()
+        self.platforms.render()
         self.player.render()
         pg.display.update()
 
     # The main loop
     def loop(self):
         while self.running:
-            self.check_events()
+            self.checkEvents()
             self.update()
             self.render()
             self.clock.tick(FPS)
@@ -56,53 +57,103 @@ class Main:
 
 
 class Physics:
+    gravity = 0.5
+    jumpHeight = -12
+    friction = 0.5
+    acceleration = 1
+    maxXVel = 8
 
-    gravity = 2
-    jumpHeight = 18
-    friction = 2
-    acceleration = 4
-
-    @staticmethod
     def squareCollision(x1, y1, w1, h1, x2, y2, w2, h2):
-        return ((x1 + w1 > x2) and (x1 < x2 + w2)) and (
-            (y1 + h1 > y2) and (y1 < y2 + h2)
-        )
+        return x1 + w1 > x2 and x1 < x2 + w2 and y1 + h1 > y2 and y1 < y2 + h2
 
 
 class Player:
     def __init__(self):
-        self.x = 0
-        self.y = 0
-        self.xVel = 0
-        self.yVel = 0
+        self.pos = pg.Vector2(250, 300)
+        self.vel = pg.Vector2(0, 0)
 
     def colliding(self):
+        for platform in main.platforms.rects:
+            if pg.Rect(self.pos.x, self.pos.y, 50, 50).colliderect(platform):
+                return True
         return False
 
     def update(self):
-        self.yVel += Physics.gravity
-        self.y += self.yVel
+        # Gravity
+        keyDown = pg.key.get_pressed()
+        self.vel.y += Physics.gravity
+        self.pos.y += self.vel.y
         if self.colliding():
             while self.colliding():
-                if self.yVel < 0:
-                    pass
-                elif self.yVel > 0:
-                    pass
-            self.yVel = 0
+                if self.vel.y < 0:
+                    self.pos.y += 0.5
+                elif self.vel.y > 0:
+                    self.pos.y -= 0.5
+            if keyDown[pg.K_UP] and self.vel.y > 0:
+                self.vel.y = Physics.jumpHeight
+            else:
+                self.vel.y = Physics.gravity
+
+        # Movement
+        # Right
+
+        if keyDown[pg.K_RIGHT]:
+            self.vel.x += Physics.acceleration
+            if self.vel.x > Physics.maxXVel:
+                self.vel.x = Physics.maxXVel
+
+        # Left
+        if keyDown[pg.K_LEFT]:
+            self.vel.x -= Physics.acceleration
+            if -self.vel.x > Physics.maxXVel:
+                self.vel.x = -Physics.maxXVel
+
+        # Apply friction
+        if self.vel.x > 0:
+            self.vel.x -= Physics.friction
+        if self.vel.x < 0:
+            self.vel.x += Physics.friction
+
+        # Go back to where you were before if you've hit a wall
+        self.pos.x += self.vel.x
+        if self.colliding():
+            self.pos.x -= self.vel.x
+            self.vel.x = 0
 
     def render(self):
-        pg.draw.rect(main.win, WHITE, (self.x, self.y, 50, 50))
+        pg.draw.rect(main.win, GREY, (self.pos.x, self.pos.y, 50, 50))
+
+
+class Platform:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 
 class Platforms:
     def __init__(self):
-        self.platforms = []
+        p = "p"
+        _ = "_"
+
+        self.rects = []
+        self.layout = [
+            [p, p, p, p, p, p, p, p, p, p, p, p],
+            [p, _, _, _, _, _, _, _, _, _, _, p],
+            [p, _, _, _, _, _, _, _, _, _, _, p],
+            [p, p, p, _, _, p, _, _, _, _, p, p],
+            [p, _, _, _, _, _, _, _, _, _, _, p],
+            [p, _, p, _, _, _, p, p, p, p, _, p],
+            [p, _, _, _, _, _, _, _, _, _, _, p],
+            [p, p, p, p, p, p, p, p, p, p, p, p],
+        ]
+        for i in range(len(self.layout)):
+            for j in range(len(self.layout[i])):
+                if self.layout[i][j] == p:
+                    self.rects.append(pg.Rect(j * 50, i * 50, 50, 50))
 
     def render(self):
-        for i in range(len(self.platforms)):
-            pg.draw.rect(
-                main.win, WHITE, (self.platforms[i].x, self.platforms[i].y, 75, 75)
-            )
+        for rect in self.rects:
+            pg.draw.rect(main.win, WHITE, rect)
 
 
 # Test if the script is directly ran
