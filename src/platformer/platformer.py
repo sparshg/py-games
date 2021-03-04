@@ -6,6 +6,7 @@ https://github.com/sparshg/pycollab
 
 # Import statements
 from os import environ
+
 # Hide pygame Hello prompt
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame as pg
@@ -14,20 +15,20 @@ import pygame as pg
 WIDTH, HEIGHT = (600, 400)
 FPS = 60
 BLACK = (0, 0, 0)
-GREY = (225/2, 225/2, 225/2)
+GREY = (225 / 2, 225 / 2, 225 / 2)
 WHITE = (255, 255, 255)
 
 # The main controller
 class Main:
     def __init__(self):
-        self.platforms = Platforms()
-        self.player = Player()
-        self.keys = Keys()
         pg.init()
         pg.display.set_caption("Platformer")
         self.running = True
         self.clock = pg.time.Clock()
         self.win = pg.display.set_mode((WIDTH, HEIGHT))
+        self.platforms = Platforms()
+        self.player = Player()
+        self.keys = Keys()
 
     # For key press detection and closing the window properly
     def checkEvents(self):
@@ -35,14 +36,22 @@ class Main:
             if event.type == pg.QUIT:
                 main.running = False
         keyDown = pg.key.get_pressed()
-        if keyDown[pg.K_RIGHT]: self.keys.rtArrow = True
-        else: self.keys.rtArrow = False
-        if keyDown[pg.K_LEFT]: self.keys.ltArrow = True
-        else: self.keys.ltArrow = False
-        if keyDown[pg.K_UP]: self.keys.upArrow = True
-        else: self.keys.upArrow = False
-        if keyDown[pg.K_DOWN]: self.keys.dnArrow = True
-        else: self.keys.dnArrow = False
+        if keyDown[pg.K_RIGHT]:
+            self.keys.rtArrow = True
+        else:
+            self.keys.rtArrow = False
+        if keyDown[pg.K_LEFT]:
+            self.keys.ltArrow = True
+        else:
+            self.keys.ltArrow = False
+        if keyDown[pg.K_UP]:
+            self.keys.upArrow = True
+        else:
+            self.keys.upArrow = False
+        if keyDown[pg.K_DOWN]:
+            self.keys.dnArrow = True
+        else:
+            self.keys.dnArrow = False
 
     # Update things
     def update(self):
@@ -64,12 +73,14 @@ class Main:
             self.clock.tick(FPS)
         pg.quit()
 
+
 class Keys:
     def __init__(self):
         self.rtArrow = False
         self.ltArrow = False
         self.upArrow = False
         self.dnArrow = False
+
 
 class Physics:
     gravity = 0.5
@@ -79,7 +90,8 @@ class Physics:
     maxXVel = 8
 
     def squareCollision(x1, y1, w1, h1, x2, y2, w2, h2):
-        return x1+w1>x2 and x1<x2+w2 and y1+h1>y2 and y1<y2+h2
+        return x1 + w1 > x2 and x1 < x2 + w2 and y1 + h1 > y2 and y1 < y2 + h2
+
 
 class Player:
     def __init__(self):
@@ -90,7 +102,16 @@ class Player:
 
     def colliding(self):
         for i in range(len(Platforms.platforms)):
-            if Physics.squareCollision(main.player.x, main.player.y, 50, 50, main.platforms.platforms[i].x, main.platforms.platforms[i].y, 50, 50):
+            if Physics.squareCollision(
+                main.player.x,
+                main.player.y,
+                50,
+                50,
+                main.platforms.platforms[i].x,
+                main.platforms.platforms[i].y,
+                50,
+                50,
+            ):
                 return True
         return False
 
@@ -137,14 +158,16 @@ class Player:
     def render(self):
         pg.draw.rect(main.win, GREY, (int(main.player.x), int(main.player.y), 50, 50))
 
+
 class Platform:
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
+
 class Platforms:
-    p = 'p'
-    _ = '_'
+    p = "p"
+    _ = "_"
     tiles = [
         [p, p, p, p, p, p, p, p, p, p, p, p],
         [p, _, _, _, _, _, _, _, _, _, _, p],
@@ -153,7 +176,7 @@ class Platforms:
         [p, _, _, _, _, _, _, _, _, _, _, p],
         [p, _, p, _, _, _, p, p, p, p, _, p],
         [p, _, _, _, _, _, _, _, _, _, _, p],
-        [p, p, p, p, p, p, p, p, p, p, p, p]
+        [p, p, p, p, p, p, p, p, p, p, p, p],
     ]
     platforms = []
 
@@ -165,7 +188,12 @@ class Platforms:
 
     def render(self):
         for i in range(len(Platforms.platforms)):
-            pg.draw.rect(main.win, WHITE, (Platforms.platforms[i].x, Platforms.platforms[i].y, 50, 50))
+            pg.draw.rect(
+                main.win,
+                WHITE,
+                (Platforms.platforms[i].x, Platforms.platforms[i].y, 50, 50),
+            )
+
 
 # Test if the script is directly ran
 if __name__ == "__main__":
