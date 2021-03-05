@@ -24,10 +24,10 @@ class Main:
         pg.init()
         pg.display.set_caption("Platformer")
         self.running = True
-        self.clock = pg.time.Clock()
         self.win = pg.display.set_mode((WIDTH, HEIGHT))
         self.platforms = Platforms()
         self.player = Player()
+        Physics.clock.tick()
 
     # For key press detection and closing the window properly
     def checkEvents(self):
@@ -52,16 +52,19 @@ class Main:
             self.checkEvents()
             self.update()
             self.render()
-            self.clock.tick(FPS)
+            Physics.dt = Physics.clock.tick(FPS) / 1000
         pg.quit()
 
 
 class Physics:
-    gravity = 0.5
-    jumpHeight = -12
-    friction = 0.5
-    acceleration = 1
-    maxXVel = 8
+
+    clock = pg.time.Clock()
+    dt = 1 / FPS
+    gravity = 1800
+    jumpHeight = -720
+    friction = 1800
+    xAcc = 3600
+    maxXVel = 480
 
     def squareCollision(x1, y1, w1, h1, x2, y2, w2, h2):
         return x1 + w1 > x2 and x1 < x2 + w2 and y1 + h1 > y2 and y1 < y2 + h2
@@ -71,6 +74,7 @@ class Player:
     def __init__(self):
         self.pos = pg.Vector2(250, 300)
         self.vel = pg.Vector2(0, 0)
+        self.onGround = True
 
     def colliding(self):
         for platform in main.platforms.rects:
@@ -79,45 +83,62 @@ class Player:
         return False
 
     def update(self):
-        # Gravity
+
+        # Get keys
         keyDown = pg.key.get_pressed()
-        self.vel.y += Physics.gravity
-        self.pos.y += self.vel.y
-        if self.colliding():
-            while self.colliding():
-                if self.vel.y < 0:
-                    self.pos.y += 0.5
-                elif self.vel.y > 0:
-                    self.pos.y -= 0.5
-            if keyDown[pg.K_UP] and self.vel.y > 0:
+
+        if self.onGround:
+            if keyDown[pg.K_UP]:
                 self.vel.y = Physics.jumpHeight
-            else:
-                self.vel.y = Physics.gravity
+                self.onGround = False
+            if not self.colliding():
+                self.onGround = False
+        else:
+            self.vel.y += Physics.gravity * Physics.dt
+            self.pos.y += self.vel.y * Physics.dt
 
-        # Movement
+            if self.colliding():
+                if self.vel.y > 0:
+                    while self.colliding():
+                        self.pos.y -= 0.5
+                    self.vel.y = 0
+                    self.onGround = True
+                else:
+                    while self.colliding():
+                        self.pos.y += 0.5
+                    self.vel.y = Physics.gravity * Physics.dt
+
         # Right
-
         if keyDown[pg.K_RIGHT]:
-            self.vel.x += Physics.acceleration
+            self.vel.x += Physics.xAcc * Physics.dt
             if self.vel.x > Physics.maxXVel:
                 self.vel.x = Physics.maxXVel
 
         # Left
         if keyDown[pg.K_LEFT]:
-            self.vel.x -= Physics.acceleration
+            self.vel.x -= Physics.xAcc * Physics.dt
             if -self.vel.x > Physics.maxXVel:
                 self.vel.x = -Physics.maxXVel
 
         # Apply friction
-        if self.vel.x > 0:
-            self.vel.x -= Physics.friction
+        # If friction starts moving block in opposite direction instead of stopping, set vel to 0
         if self.vel.x < 0:
-            self.vel.x += Physics.friction
+            self.vel.x += Physics.friction * Physics.dt
+            if self.vel.x > 0:
+                self.vel.x = 0
+        elif self.vel.x > 0:
+            self.vel.x -= Physics.friction * Physics.dt
+            if self.vel.x < 0:
+                self.vel.x = 0
 
-        # Go back to where you were before if you've hit a wall
-        self.pos.x += self.vel.x
+        # Wall collision
+        self.pos.x += self.vel.x * Physics.dt
         if self.colliding():
-            self.pos.x -= self.vel.x
+            while self.colliding():
+                if self.vel.x > 0:
+                    self.pos.x -= 0.5
+                else:
+                    self.pos.x += 0.5
             self.vel.x = 0
 
     def render(self):
