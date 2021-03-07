@@ -6,11 +6,9 @@ https://github.com/sparshg/pycollab
 
 import pygame as pg
 import sys
+from universe import Universe
+from constants import *
 
-# Declare some constants and variables
-WIDTH, HEIGHT = (1248, 702)
-FPS = 60
-BLACK = "#000000"
 
 # The main controller
 class Main:
@@ -21,6 +19,8 @@ class Main:
         self.clock = pg.time.Clock()
         self.running = True
 
+        self.universe = Universe()
+
     # For key press detection and closing the window properly
     def checkEvents(self):
         for event in pg.event.get():
@@ -28,20 +28,21 @@ class Main:
                 self.running = False
 
     # Update things
-    def update(self):
-        pass
+    def update(self, dt):
+        self.universe.update(dt)
 
     # Draw things
     def render(self):
         self.win.fill(BLACK)
+        self.universe.render(self.win)
         pg.display.update()
 
     # The main loop
     def loop(self):
         while self.running:
-            self.dt = self.clock.tick(FPS) / 1000
+            dt = self.clock.tick(FPS) / 1000
             self.checkEvents()
-            self.update()
+            self.update(dt)
             self.render()
         pg.quit()
         sys.exit()
