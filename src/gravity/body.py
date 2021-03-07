@@ -3,7 +3,7 @@ from constants import *
 
 
 class Body:
-    def __init__(self, mass, radius, pos=(0, 0), vel=(0, 0)):
+    def __init__(self, mass, radius, pos=(WIDTH / 2, HEIGHT / 2), vel=(0, 0)):
         self.mass = mass
         self.radius = radius
         self.pos = pg.Vector2(pos)

@@ -1,10 +1,14 @@
 import pygame as pg
 from body import Body
+from constants import *
 
 
 class Universe:
     def __init__(self):
-        self.bodies = [Body(10, 10), Body(2, 10, (300, 0))]
+        self.bodies = [
+            Body(10, 10, (WIDTH / 2 - 100, HEIGHT / 2), (0, 50)),
+            Body(10, 10, (WIDTH / 2 + 100, HEIGHT / 2), (0, -50)),
+        ]
 
     def update(self, dt):
         for body in self.bodies:
