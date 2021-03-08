@@ -7,6 +7,7 @@ https://github.com/sparshg/pycollab
 import pygame as pg
 import sys
 from universe import Universe
+from planet import Planet
 from constants import *
 
 
@@ -16,6 +17,8 @@ class Main:
         pg.init()
         pg.display.set_caption("gravity")
         self.win = pg.display.set_mode((WIDTH, HEIGHT))
+        self.background = pg.Surface((WIDTH, HEIGHT)).convert_alpha()
+        self.background.fill((0, 0, 0, 2))
         self.clock = pg.time.Clock()
         self.running = True
 
@@ -26,6 +29,11 @@ class Main:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.running = False
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    self.universe.planets.append(
+                        Planet(10, 3, (WIDTH, HEIGHT), (-100, -100))
+                    )
 
     # Update things
     def update(self, dt):
@@ -33,7 +41,8 @@ class Main:
 
     # Draw things
     def render(self):
-        self.win.fill(BLACK)
+        self.win.blit(self.background, (0, 0))
+
         self.universe.render(self.win)
         pg.display.update()
 

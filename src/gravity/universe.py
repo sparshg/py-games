@@ -1,4 +1,3 @@
-import pygame as pg
 from planet import Planet
 from constants import *
 
@@ -6,8 +5,8 @@ from constants import *
 class Universe:
     def __init__(self):
         self.planets = [
-            Planet(10, 10, (WIDTH / 2 - 100, HEIGHT / 2), (0, 50)),
-            Planet(10, 10, (WIDTH / 2 + 100, HEIGHT / 2), (0, -50)),
+            Planet(100, 10, (WIDTH / 2, HEIGHT / 2), fixed=True),
+            Planet(50, 5, (WIDTH / 2 - 400, HEIGHT / 2), (0, -100)),
         ]
 
     def update(self, dt):
