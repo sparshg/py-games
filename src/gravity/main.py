@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """
 Github repo can be found here:
-https://github.com/sparshg/pycollab
+https://github.com/sparshg/py-games
 """
 
 import pygame as pg
@@ -21,7 +21,7 @@ class Main:
 
         self.universe = Universe()
 
-    # For key press detection and closing the window properly
+    # Key press and close button functionality
     def checkEvents(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
