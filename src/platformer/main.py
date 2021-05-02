@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """
 Github repo can be found here:
-https://github.com/sparshg/pycollab
+https://github.com/sparshg/py-games
 """
 
 # Import statements
@@ -11,12 +11,9 @@ from os import environ
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame as pg
 
-# Declare some constants and variables
-WIDTH, HEIGHT = (600, 400)
-FPS = 60
-BLACK = (0, 0, 0)
-GREY = (225 / 2, 225 / 2, 225 / 2)
-WHITE = (255, 255, 255)
+import sys
+from constants import *
+from physics import Physics
 
 # The main controller
 class Main:
@@ -29,7 +26,7 @@ class Main:
         self.player = Player()
         Physics.clock.tick()
 
-    # For key press detection and closing the window properly
+    # For key press and close button functionality
     def checkEvents(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -54,20 +51,7 @@ class Main:
             self.render()
             Physics.dt = Physics.clock.tick(FPS) / 1000
         pg.quit()
-
-
-class Physics:
-
-    clock = pg.time.Clock()
-    dt = 1 / FPS
-    gravity = 1800
-    jumpHeight = -720
-    friction = 1800
-    xAcc = 3600
-    maxXVel = 480
-
-    def squareCollision(x1, y1, w1, h1, x2, y2, w2, h2):
-        return x1 + w1 > x2 and x1 < x2 + w2 and y1 + h1 > y2 and y1 < y2 + h2
+        sys.exit()
 
 
 class Player:
@@ -75,10 +59,13 @@ class Player:
         self.pos = pg.Vector2(250, 300)
         self.vel = pg.Vector2(0, 0)
         self.onGround = True
+        self.prevPositions = []
+        self.width = 40
+        self.height = 40
 
     def colliding(self):
         for platform in main.platforms.rects:
-            if pg.Rect(self.pos.x, self.pos.y, 50, 50).colliderect(platform):
+            if pg.Rect(self.pos.x, self.pos.y, self.width, self.height).colliderect(platform):
                 return True
         return False
 
@@ -141,8 +128,24 @@ class Player:
                     self.pos.x += 0.5
             self.vel.x = 0
 
+        # Trail
+        self.prevPositions.append(pg.Vector2(self.pos.x, self.pos.y))
+        if len(self.prevPositions) > self.width/2:
+            self.prevPositions.pop(0)
+
     def render(self):
-        pg.draw.rect(main.win, GREY, (self.pos.x, self.pos.y, 50, 50))
+
+        # Ren trail
+        for i in range(len(self.prevPositions)):
+            pg.draw.rect(main.win, ORANGE, (
+                self.prevPositions[len(self.prevPositions) - i - 1].x - (self.width-i*2)/2 + self.width/2,
+                self.prevPositions[len(self.prevPositions) - i - 1].y - (self.height-i*2)/2 + self.height/2,
+                self.width - i*2,
+                self.height - i*2
+            ))
+
+        # Ren player
+        pg.draw.rect(main.win, RED, (self.pos.x, self.pos.y, self.width, self.height))
 
 
 class Platform:
@@ -155,7 +158,6 @@ class Platforms:
     def __init__(self):
         p = "p"
         _ = "_"
-
         self.rects = []
         self.layout = [
             [p, p, p, p, p, p, p, p, p, p, p, p],
