@@ -1,23 +1,17 @@
 #!/usr/bin/python
 """
 Github repo can be found here:
-https://github.com/sparshg/pycollab
+https://github.com/sparshg/py-games
 """
+
+# Import statements
 from os import environ
-import math
 
 # Hide pygame Hello prompt
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-import pygame
-from pygame.math import Vector2
+import pygame as pg
 
-# Declare some constants and variables
-WIDTH, HEIGHT = (600, 400)
-FPS = 60
-WHITE = "#F1F1F1"
-BLACK = "#101010"
-ORANGE = "#FF6600"
-RED = "#FF1F00"
+from constants import *
 
 
 class Frame:
@@ -41,7 +35,7 @@ class Frame:
         for i in range(3):
             for j in range(3):
                 self.rects.append(
-                    pygame.Rect((-1.5 + 1 * j) * gap, (1.5 - 1 * i) * gap, gap, gap)
+                    pg.Rect((-1.5 + 1 * j) * gap, (1.5 - 1 * i) * gap, gap, gap)
                 )
         self.rects = self.cartesian_to_standard(self.rects)
 
@@ -84,7 +78,7 @@ class Frame:
                     if n is not None:
                         n.wait_and_remove = True
                         n.remove_time = (
-                            2 * n.blink_count * n.blink_dur + pygame.time.get_ticks()
+                            2 * n.blink_count * n.blink_dur + pg.time.get_ticks()
                         )
 
         def check(sum, i, j):
@@ -99,7 +93,7 @@ class Frame:
                     if j is None:
                         j = t
                     self.moves[i][j].blink = True
-                    self.moves[i][j].blink_start = pygame.time.get_ticks()
+                    self.moves[i][j].blink_start = pg.time.get_ticks()
                     i, j = prev
                 reset()
 
@@ -123,7 +117,7 @@ class Frame:
     def setup_remove(self, dur=500, animate=False):
         if not self.remove:
             self.remove = True
-            self.remove_time = pygame.time.get_ticks() + dur
+            self.remove_time = pg.time.get_ticks() + dur
             if animate:
                 for i in self.animations:
                     i.setup_remove(dur)
@@ -136,7 +130,7 @@ class Frame:
                 if move is not None:
                     move.draw()
         if self.remove:
-            if pygame.time.get_ticks() > self.remove_time:
+            if pg.time.get_ticks() > self.remove_time:
                 main.reset()
 
 
@@ -158,10 +152,10 @@ class OX:
 
     def draw(self):
         if self.blink:
-            if pygame.time.get_ticks() < self.blink_start + self.blink_dur:
+            if pg.time.get_ticks() < self.blink_start + self.blink_dur:
                 self.animation.update()
-            elif pygame.time.get_ticks() > self.blink_start + 2 * self.blink_dur:
-                self.blink_start = pygame.time.get_ticks()
+            elif pg.time.get_ticks() > self.blink_start + 2 * self.blink_dur:
+                self.blink_start = pg.time.get_ticks()
                 self.blink_count -= 1
                 if self.blink_count == 0:
                     self.blink = False
@@ -169,7 +163,7 @@ class OX:
             self.animation.update()
 
         if self.wait_and_remove:
-            if pygame.time.get_ticks() > self.remove_time:
+            if pg.time.get_ticks() > self.remove_time:
                 self.animation.setup_remove()
                 main.frame.setup_remove()
                 self.wait_and_remove = False
@@ -191,7 +185,7 @@ class Animate:
         self.function = fn
         self.remove = False
         self.dur = dur
-        self.start_time = pygame.time.get_ticks()
+        self.start_time = pg.time.get_ticks()
         self.final_time = self.start_time + dur
         self.type = None
         self.sub_animations = None
@@ -200,8 +194,8 @@ class Animate:
         self.type = "line"
         self.finished = False
         self.width = width
-        self.p1 = Vector2(p1)
-        self.p2 = Vector2(p2)
+        self.p1 = pg.Vector2(p1)
+        self.p2 = pg.Vector2(p2)
         self.p = self.p2 - self.p1
         self.length = self.p.magnitude()
         return self
@@ -212,9 +206,9 @@ class Animate:
         self.width = width
         self.radius = radius
         self.r = radius
-        self.center = Vector2(center)
-        self.rect = pygame.Rect(
-            (center - Vector2(radius, radius)), (2 * radius, 2 * radius)
+        self.center = pg.Vector2(center)
+        self.rect = pg.Rect(
+            (center - pg.Vector2(radius, radius)), (2 * radius, 2 * radius)
         )
         return self
 
@@ -222,12 +216,12 @@ class Animate:
         self.type = "cross"
         # fmt: off
         points = [
-            Vector2(-length, 0), Vector2(length, 0),
-            Vector2(0, length), Vector2(0, -length)
+            pg.Vector2(-length, 0), pg.Vector2(length, 0),
+            pg.Vector2(0, length), pg.Vector2(0, -length)
         ]
         # fmt: on
         for point in points:
-            point.update(point.rotate(45) + Vector2(center))
+            point.update(point.rotate(45) + pg.Vector2(center))
 
         self.sub_animations = [
             Animate(self.dur + i * 150, self.color, self.function).line(
@@ -241,7 +235,7 @@ class Animate:
         self.finished = True
         self.remove = True
         self.dur = dur
-        self.start_time = pygame.time.get_ticks()
+        self.start_time = pg.time.get_ticks()
         self.final_time = self.start_time + self.dur
         if self.sub_animations is not None:
             for i in self.sub_animations:
@@ -257,8 +251,8 @@ class Animate:
 
         # Calculate the animation
         if not self.finished or self.remove:
-            if pygame.time.get_ticks() < self.final_time and not skip:
-                fraction = (pygame.time.get_ticks() - self.start_time) / self.dur
+            if pg.time.get_ticks() < self.final_time and not skip:
+                fraction = (pg.time.get_ticks() - self.start_time) / self.dur
                 if fraction < 0.01:
                     fraction += 0.008
 
@@ -283,37 +277,35 @@ class Animate:
 
         # Draw stuff
         if self.type == "line":
-            pygame.draw.line(
-                main.win, self.color, self.p1, self.p + self.p1, self.width
-            )
+            pg.draw.line(main.win, self.color, self.p1, self.p + self.p1, self.width)
         elif self.type == "circle":
-            pygame.draw.circle(main.win, self.color, self.center, self.radius)
-            pygame.draw.circle(main.win, BLACK, self.center, self.r)
+            pg.draw.circle(main.win, self.color, self.center, self.radius)
+            pg.draw.circle(main.win, BLACK, self.center, self.r)
 
 
 # The main controller
 class Main:
     def __init__(self):
-        pygame.init()
-        pygame.display.set_caption("Tic-Tac-Toe")
+        pg.init()
+        pg.display.set_caption("Tic-Tac-Toe")
 
-        self.win = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.win = pg.display.set_mode((WIDTH, HEIGHT))
         self.running = True
 
         self.frame = Frame()
-        self.clock = pygame.time.Clock()
+        self.clock = pg.time.Clock()
 
     def check_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
                 main.running = False
-            if event.type == pygame.MOUSEBUTTONUP:
-                self.frame.detect_click(pygame.mouse.get_pos())
+            if event.type == pg.MOUSEBUTTONUP:
+                self.frame.detect_click(pg.mouse.get_pos())
 
     def draw(self):
         self.win.fill(BLACK)
         self.frame.draw()
-        pygame.display.update()
+        pg.display.update()
 
     def reset(self):
         self.frame = Frame()
@@ -324,7 +316,7 @@ class Main:
             self.check_events()
             self.draw()
             self.clock.tick(FPS)
-        pygame.quit()
+        pg.quit()
 
 
 # Test if the script is directly ran
