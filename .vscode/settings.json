@@ -1,6 +1,9 @@
 {
     "python.analysis.extraPaths": [
-        "./src/gravity"
+        "./src/gravity",
+        "./src/platformer",
+        "./src/platformer/level_creator",
+        "./src/tictactoe"
     ],
     "python.linting.pylintArgs": [
         "--disable=all",
