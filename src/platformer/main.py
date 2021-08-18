@@ -10,23 +10,26 @@ from os import environ
 # Hide pygame Hello prompt
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame as pg
-
 import sys, random
+
+import physics
 from constants import *
-from read_level import *
-from physics import *
+from player import Player
+from platforms import Platforms
 
 # The main controller
 class Main:
     def __init__(self):
         pg.init()
         pg.display.set_caption("Platformer")
+
         self.running = True
         self.win = pg.display.set_mode((WIDTH, HEIGHT))
         self.platforms = Platforms()
         self.player = Player()
         self.bgEnts = BgEnts()
-        Physics.clock.tick()
+        self.clock = pg.time.Clock()
+        self.clock.tick()
 
     # For key press and close button functionality
     def check_events(self):
@@ -37,14 +40,14 @@ class Main:
     # Update things
     def update(self):
         self.bgEnts.update()
-        self.player.update()
+        self.player.update(self.platforms.rects)
 
     # Draw things
     def render(self):
         self.win.fill(BLACK)
         self.bgEnts.render()
-        self.platforms.render()
-        self.player.render()
+        self.platforms.render(self.win, self.player)
+        self.player.render(self.win)
         pg.display.update()
 
     # The main loop
@@ -53,172 +56,9 @@ class Main:
             self.check_events()
             self.update()
             self.render()
-            Physics.dt = Physics.clock.tick(FPS) / 1000
+            physics.dt = self.clock.tick(FPS) / 1000
         pg.quit()
         sys.exit()
-
-
-# The player
-class Player:
-    def __init__(self):
-        self.pos = pg.Vector2(250, 300)
-        self.vel = pg.Vector2(0, 0)
-        self.onGround = True
-        self.prevPositions = []
-        self.width = 40
-        self.height = 40
-        self.trailPower = 2
-
-    # Check col with ground
-    def colliding(self):
-        for platform in main.platforms.rects:
-            if pg.Rect(self.pos.x, self.pos.y, self.width, self.height).colliderect(
-                pg.Rect(platform.x, platform.y, platform.w, platform.h)
-            ):
-                return True
-        return False
-
-    # Update player
-    def update(self):
-
-        # Get keys
-        keyDown = pg.key.get_pressed()
-
-        if self.onGround:
-            if keyDown[pg.K_UP]:
-                self.vel.y = Physics.jumpHeight
-                self.onGround = False
-            if not self.colliding():
-                self.onGround = False
-        else:
-            self.vel.y += Physics.gravity * Physics.dt
-            self.pos.y += self.vel.y * Physics.dt
-
-            if self.colliding():
-                if self.vel.y > 0:
-                    while self.colliding():
-                        self.pos.y -= 0.5
-                    self.vel.y = 0
-                    self.onGround = True
-                else:
-                    while self.colliding():
-                        self.pos.y += 0.5
-                    self.vel.y = Physics.gravity * Physics.dt
-
-        # Right
-        if keyDown[pg.K_RIGHT]:
-            self.vel.x += Physics.xAcc * Physics.dt
-            if self.vel.x > Physics.maxXVel:
-                self.vel.x = Physics.maxXVel
-
-        # Left
-        if keyDown[pg.K_LEFT]:
-            self.vel.x -= Physics.xAcc * Physics.dt
-            if -self.vel.x > Physics.maxXVel:
-                self.vel.x = -Physics.maxXVel
-
-        # Apply friction
-        if self.vel.x < 0:
-            self.vel.x += Physics.friction * Physics.dt
-            if self.vel.x > 0:
-                self.vel.x = 0
-        elif self.vel.x > 0:
-            self.vel.x -= Physics.friction * Physics.dt
-            if self.vel.x < 0:
-                self.vel.x = 0
-
-        # Wall collision
-        self.pos.x += self.vel.x * Physics.dt
-        if self.colliding():
-            while self.colliding():
-                if self.vel.x > 0:
-                    self.pos.x -= 0.5
-                else:
-                    self.pos.x += 0.5
-            self.vel.x = 0
-
-        # Trail
-        self.prevPositions.insert(0, pg.Vector2(self.pos.x, self.pos.y))
-        if len(self.prevPositions) > self.width / 2:
-            self.prevPositions.pop(len(self.prevPositions) - 1)
-
-    # Render player
-    def render(self):
-
-        # Render trail
-        for i in range(len(self.prevPositions)):
-            pg.draw.rect(
-                main.win,
-                ORANGE,
-                (
-                    WIDTH / 2
-                    - self.width / 4
-                    - self.pos.x
-                    + self.prevPositions[i].x
-                    + i * self.trailPower / 2,
-                    HEIGHT / 2
-                    - self.height / 4
-                    - self.pos.y
-                    + self.prevPositions[i].y
-                    + i * self.trailPower / 2,
-                    self.width / 2 - i * self.trailPower,
-                    self.height / 2 - i * self.trailPower,
-                ),
-            )
-
-        # Render player
-        pg.draw.rect(
-            main.win,
-            RED,
-            (
-                WIDTH / 2 - self.width / 2,
-                HEIGHT / 2 - self.height / 2,
-                self.width,
-                self.height,
-            ),
-        )
-
-
-# Platform class
-class Platform:
-    def __init__(self, x, y, w, h, type="ground"):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-        self.type = type
-
-
-# Platforms
-class Platforms:
-    def __init__(self):
-        p = "ground"
-        _ = "_"
-        self.rects = []
-        self.layout = read_level()
-
-        # Convert JSON data to Python list
-        for i in range(len(self.layout)):
-            for j in range(len(self.layout[i])):
-                if self.layout[i][j] == p:
-                    self.rects.append(Platform(j * 50, i * 50, 50, 50))
-
-    # Render platforms
-    def render(self):
-        for rect in self.rects:
-            pg.draw.rect(
-                main.win,
-                DARKPURPLE,
-                (
-                    rect.x - main.player.pos.x - int(main.player.width / 2) + WIDTH / 2,
-                    rect.y
-                    - main.player.pos.y
-                    - int(main.player.height / 2)
-                    + HEIGHT / 2,
-                    rect.w,
-                    rect.h,
-                ),
-            )
 
 
 # Background objects
