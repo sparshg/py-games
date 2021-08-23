@@ -10,173 +10,143 @@ from os import environ
 # Hide pygame Hello prompt
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame as pg
+import sys, random
 
-import sys
+import physics
 from constants import *
-from physics import Physics
+from player import Player
+from platforms import Platforms
 
 # The main controller
 class Main:
     def __init__(self):
         pg.init()
         pg.display.set_caption("Platformer")
+
         self.running = True
         self.win = pg.display.set_mode((WIDTH, HEIGHT))
         self.platforms = Platforms()
         self.player = Player()
-        Physics.clock.tick()
+        self.bgEnts = BgEnts()
+        self.clock = pg.time.Clock()
+        self.clock.tick()
 
     # For key press and close button functionality
-    def checkEvents(self):
+    def check_events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                main.running = False
+                self.running = False
 
     # Update things
     def update(self):
-        self.player.update()
+        self.bgEnts.update()
+        self.player.update(self.platforms.rects)
 
     # Draw things
     def render(self):
         self.win.fill(BLACK)
-        self.platforms.render()
-        self.player.render()
+        self.bgEnts.render()
+        self.platforms.render(self.win, self.player)
+        self.player.render(self.win)
         pg.display.update()
 
     # The main loop
     def loop(self):
         while self.running:
-            self.checkEvents()
+            self.check_events()
             self.update()
             self.render()
-            Physics.dt = Physics.clock.tick(FPS) / 1000
+            physics.dt = self.clock.tick(FPS) / 1000
         pg.quit()
         sys.exit()
 
 
-class Player:
+# Background objects
+class BgEnts:
     def __init__(self):
-        self.pos = pg.Vector2(250, 300)
-        self.vel = pg.Vector2(0, 0)
-        self.onGround = True
-        self.prevPositions = []
-        self.width = 40
-        self.height = 40
+        self.waves = self.Waves()
 
-    def colliding(self):
-        for platform in main.platforms.rects:
-            if pg.Rect(self.pos.x, self.pos.y, self.width, self.height).colliderect(platform):
-                return True
-        return False
-
+    # Update scene
     def update(self):
+        self.waves.gen_waves()
+        self.waves.update()
 
-        # Get keys
-        keyDown = pg.key.get_pressed()
-
-        if self.onGround:
-            if keyDown[pg.K_UP]:
-                self.vel.y = Physics.jumpHeight
-                self.onGround = False
-            if not self.colliding():
-                self.onGround = False
-        else:
-            self.vel.y += Physics.gravity * Physics.dt
-            self.pos.y += self.vel.y * Physics.dt
-
-            if self.colliding():
-                if self.vel.y > 0:
-                    while self.colliding():
-                        self.pos.y -= 0.5
-                    self.vel.y = 0
-                    self.onGround = True
-                else:
-                    while self.colliding():
-                        self.pos.y += 0.5
-                    self.vel.y = Physics.gravity * Physics.dt
-
-        # Right
-        if keyDown[pg.K_RIGHT]:
-            self.vel.x += Physics.xAcc * Physics.dt
-            if self.vel.x > Physics.maxXVel:
-                self.vel.x = Physics.maxXVel
-
-        # Left
-        if keyDown[pg.K_LEFT]:
-            self.vel.x -= Physics.xAcc * Physics.dt
-            if -self.vel.x > Physics.maxXVel:
-                self.vel.x = -Physics.maxXVel
-
-        # Apply friction
-        # If friction starts moving block in opposite direction instead of stopping, set vel to 0
-        if self.vel.x < 0:
-            self.vel.x += Physics.friction * Physics.dt
-            if self.vel.x > 0:
-                self.vel.x = 0
-        elif self.vel.x > 0:
-            self.vel.x -= Physics.friction * Physics.dt
-            if self.vel.x < 0:
-                self.vel.x = 0
-
-        # Wall collision
-        self.pos.x += self.vel.x * Physics.dt
-        if self.colliding():
-            while self.colliding():
-                if self.vel.x > 0:
-                    self.pos.x -= 0.5
-                else:
-                    self.pos.x += 0.5
-            self.vel.x = 0
-
-        # Trail
-        self.prevPositions.append(pg.Vector2(self.pos.x, self.pos.y))
-        if len(self.prevPositions) > self.width/2:
-            self.prevPositions.pop(0)
-
+    # Draw scene
     def render(self):
+        self.waves.render()
 
-        # Ren trail
-        for i in range(len(self.prevPositions)):
-            pg.draw.rect(main.win, ORANGE, (
-                self.prevPositions[len(self.prevPositions) - i - 1].x - (self.width-i*2)/2 + self.width/2,
-                self.prevPositions[len(self.prevPositions) - i - 1].y - (self.height-i*2)/2 + self.height/2,
-                self.width - i*2,
-                self.height - i*2
-            ))
+    class Waves:
+        def __init__(self):
+            # Bigger num = less waves
+            # Smaller num = more waves
+            self.waveGenRate = 75
+            # Bigger num = less thickness
+            # Smaller num = more thickness
+            self.waveThickness = 4
 
-        # Ren player
-        pg.draw.rect(main.win, RED, (self.pos.x, self.pos.y, self.width, self.height))
+            # Min/max wave size
+            self.minWaveSize = 10
+            self.maxWaveSize = 35
 
+            # Min/max wave max life
+            self.minWaveLife = 25
+            self.maxWaveLife = 125
 
-class Platform:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+            # Min/max wave speed
+            self.minWaveSpeed = 10
+            self.maxWaveSpeed = 35
 
+            self.waves = []
 
-class Platforms:
-    def __init__(self):
-        p = "p"
-        _ = "_"
-        self.rects = []
-        self.layout = [
-            [p, p, p, p, p, p, p, p, p, p, p, p],
-            [p, _, _, _, _, _, _, _, _, _, _, p],
-            [p, _, _, _, _, _, _, _, _, _, _, p],
-            [p, p, p, _, _, p, _, _, _, _, p, p],
-            [p, _, _, _, _, _, _, _, _, _, _, p],
-            [p, _, p, _, _, _, p, p, p, p, _, p],
-            [p, _, _, _, _, _, _, _, _, _, _, p],
-            [p, p, p, p, p, p, p, p, p, p, p, p],
-        ]
-        for i in range(len(self.layout)):
-            for j in range(len(self.layout[i])):
-                if self.layout[i][j] == p:
-                    self.rects.append(pg.Rect(j * 50, i * 50, 50, 50))
+        # Wave class
+        class Wave:
+            def __init__(self, x, y, life, speed):
+                self.x = x
+                self.y = y
+                self.life = life
+                self.speed = speed
+                self.frame = 0
 
-    def render(self):
-        for rect in self.rects:
-            pg.draw.rect(main.win, WHITE, rect)
+        # Generate waves randomly
+        def gen_waves(self):
+            if random.randint(0, self.waveGenRate) == self.waveGenRate:
+                self.waves.append(
+                    self.Wave(
+                        random.randint(0, WIDTH),
+                        random.randint(0, HEIGHT),
+                        random.randint(self.minWaveLife, self.maxWaveLife),
+                        random.randint(self.minWaveSpeed, self.maxWaveSpeed),
+                    )
+                )
+
+        # Update waves
+        def update(self):
+            for i in range(len(self.waves)):
+                if self.waves[i].frame >= self.waves[i].life:
+                    self.waves[i] = None
+                else:
+                    self.waves[i].frame += 1
+            # Remove empty list items
+            self.waves = list(filter(lambda item: item != None, self.waves))
+
+        # Render waves
+        def render(self):
+            for i in range(len(self.waves)):
+                # Use surface since pg.draw.circle doesn't support transparency
+                surf = pg.Surface((WIDTH, HEIGHT), pg.SRCALPHA, 32)
+                pg.draw.circle(
+                    surf,
+                    (
+                        # Convert hex code to RGB tuple then add allpha channel
+                        tuple(int(PURPLE.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
+                        # Alpha channel, set according to frame of wave
+                        + (255 - 255 / self.waves[i].life * self.waves[i].frame,)
+                    ),
+                    (self.waves[i].x, self.waves[i].y),
+                    self.waves[i].frame,
+                    int(self.waves[i].frame / self.waveThickness),
+                )
+                main.win.blit(surf, (0, 0))
 
 
 # Test if the script is directly ran
