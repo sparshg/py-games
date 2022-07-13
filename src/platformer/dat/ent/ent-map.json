@@ -1,0 +1,8 @@
+{
+    "entities": [
+        {"name": "Unknown", "friction": 0.01, "moduleName": "unknown"},
+        {"name": "Player", "friction": 0.01, "moduleName": "player"},
+        {"name": "Grass", "friction": 0.05, "moduleName": "grass"}
+    ]
+}
+
