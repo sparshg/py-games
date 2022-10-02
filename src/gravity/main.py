@@ -18,7 +18,6 @@ class Main:
         self.win = pg.display.set_mode((WIDTH, HEIGHT))
         self.clock = pg.time.Clock()
         self.running = True
-
         self.universe = Universe()
 
     # Key press and close button functionality
@@ -44,6 +43,12 @@ class Main:
             self.checkEvents()
             self.update(dt)
             self.render()
+
+            for event in pg.event.get():
+                  if (event.type ==pg.KEYDOWN):
+                    if event.key == pg.K_SPACE:
+                        self.universe.add()
+
         pg.quit()
         sys.exit()
 
