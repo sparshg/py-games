@@ -25,6 +25,9 @@ class Main:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.running = False
+            if (event.type ==pg.KEYDOWN):
+                if event.key == pg.K_SPACE:
+                    self.universe.add()
 
     # Update things
     def update(self, dt):
@@ -43,11 +46,6 @@ class Main:
             self.checkEvents()
             self.update(dt)
             self.render()
-
-            for event in pg.event.get():
-                  if (event.type ==pg.KEYDOWN):
-                    if event.key == pg.K_SPACE:
-                        self.universe.add()
 
         pg.quit()
         sys.exit()
