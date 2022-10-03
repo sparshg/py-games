@@ -8,6 +8,7 @@ Collaborator: [@MTM828](https://github.com/mtm828)
 - Open an issue before the PR to avoid duplicate ideas.
 - Do not just copy-paste code that uses someone else's work.
 - Make sure the file structure is the same as other games.
+- Make sure that the games are made using pygame
 
 
 ## Tic-Tac-Toe
