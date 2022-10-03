@@ -56,7 +56,14 @@ def gameLoop():
 
     foodx = round(random.randrange(0, dis_width - snake_block) / 10.0) * 10.0
     foody = round(random.randrange(0, dis_height - snake_block) / 10.0) * 10.0
-
+    
+    reverse_key = {
+        pygame.K_UP: pygame.K_DOWN,
+        pygame.K_DOWN: pygame.K_UP,
+        pygame.K_LEFT: pygame.K_RIGHT,
+        pygame.K_RIGHT: pygame.K_LEFT
+    }
+    last_key = None
     while not game_over:
 
         while game_close == True:
@@ -76,19 +83,21 @@ def gameLoop():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_over = True
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN and event.key != reverse_key.get(last_key):
                 if event.key == pygame.K_LEFT:
                     x1_change = -snake_block
                     y1_change = 0
-                elif event.key == pygame.K_RIGHT:
+                elif event.key == pygame.K_RIGHT and event.key != reverse_key.get(last_key):
                     x1_change = snake_block
                     y1_change = 0
-                elif event.key == pygame.K_UP:
+                elif event.key == pygame.K_UP and event.key != reverse_key.get(last_key):
                     y1_change = -snake_block
                     x1_change = 0
-                elif event.key == pygame.K_DOWN:
+                elif event.key == pygame.K_DOWN and event.key != reverse_key.get(last_key):
                     y1_change = snake_block
                     x1_change = 0
+                last_key = event.key
+            
 
         if x1 >= dis_width or x1 < 0 or y1 >= dis_height or y1 < 0:
             game_close = True
