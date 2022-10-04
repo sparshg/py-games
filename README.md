@@ -6,7 +6,7 @@ Collaborator: [@MTM828](https://github.com/mtm828)
 ## Contribution Guidelines
 
 - Make sure that the games are made using pygame.
-- Low qualtiy games won't be accepted.
+- Low quality games won't be accepted.
 - Open an issue before the PR to avoid duplicate ideas.
 - Do not just copy-paste code that uses someone else's work.
 - Make sure the file structure is the same as other games.
