@@ -19,8 +19,6 @@ pygame.init()
 sound=pygame.mixer.Sound("mario.wav")
 block_brick=pygame.mixer.Sound("pop.wav")
 gunshot=pygame.mixer.Sound("40_smith_wesson.wav")
-music=pygame.mixer.Sound("sierra_nevada.wav")
-pygame.mixer.Sound.play(music)
 
 width=800
 height=600
