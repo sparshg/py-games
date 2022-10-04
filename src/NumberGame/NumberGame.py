@@ -2,18 +2,17 @@ import os
 import pygame
 import sys
 
-from src.numpad import NumPad
-from src.button import RestartButton
-from src.text import ClueText
-import src.logic as logic
-import src.constants as const
+from numpad import NumPad
+from button import RestartButton
+from text import ClueText
+import logic as logic
+import constants as const
 
 
 class Game:
     def __init__(self):
         # Enter instances here -----------------------------------------------------
         logic.gen_secret_num()
-
         self.restart_button = RestartButton("Restart", 110, 30, (680, 360), const.RED)
         self.numpad = NumPad()
         self.clue_text = ClueText(10, 5)
@@ -21,10 +20,8 @@ class Game:
     def run(self):  # This bad boy runs every frame -------------------------------
         # Enter functions here
         self.draw_ui_rect()
-
         self.numpad.draw(screen)
         self.restart_button.draw(screen)
-
         self.clue_text.draw(screen)
 
     @staticmethod
@@ -37,7 +34,8 @@ class Game:
 # Game Setups -------------------------------------------------------------
 # Switch to parent directory
 path = os.path.dirname(__file__)
-os.chdir(os.path.abspath(os.path.join(path, os.pardir))) 
+os.chdir(os.path.abspath(os.path.join(path, os.pardir)))
+
 # Initialize pygame
 pygame.init()
 clock = pygame.time.Clock()
@@ -62,15 +60,6 @@ def run_game():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if const.game_state == 'won':
-                    if event.key == pygame.K_RETURN:
-                        const.game_state = 'highscore'
-                    if event.key == pygame.K_BACKSPACE:
-                        const.text_input = const.text_input[:-1]
-                    else:
-                        if len(const.text_input) < 10:
-                            const.text_input += event.unicode
 
         # Game code
         program.run()
