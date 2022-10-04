@@ -46,7 +46,6 @@ class Main:
             self.checkEvents()
             self.update(dt)
             self.render()
-
         pg.quit()
         sys.exit()
 

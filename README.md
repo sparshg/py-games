@@ -14,6 +14,12 @@ Collaborator: [@MTM828](https://github.com/mtm828)
 ## Tic-Tac-Toe
 ![demo](demo/tictactoe.gif)
 
+## Gravity
+![demo](demo/gravity.gif)
+
+## Platformer
+![demo](demo/platformer.gif)
+
 ## Contributors
 This project welcomes your PR and issues.<br>
 Thanks to all the people who have contributed!
