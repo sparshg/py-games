@@ -96,7 +96,8 @@ def gameLoop():
                 elif event.key == pygame.K_DOWN and event.key != reverse_key.get(last_key):
                     y1_change = snake_block
                     x1_change = 0
-                last_key = event.key
+                if event.key in reverse_key:
+                    last_key = event.key
             
 
         if x1 >= dis_width or x1 < 0 or y1 >= dis_height or y1 < 0:
