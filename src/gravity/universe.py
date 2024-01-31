@@ -6,26 +6,25 @@ from random import randrange
 
 class Universe:
     def __init__(self):
-        self.planets = [
-            Planet(10, 10, (WIDTH / 2 - 100, HEIGHT / 2), (0, 50)),
-            Planet(10, 10, (WIDTH / 2 + 100, HEIGHT / 2), (0, -50)),
-        ]
+        self.planets = []
+        for i in range(randrange(2, 8)):
+            radius = randrange(2, 28)
+            self.planets.append(
+                Planet(
+                    radius * 10000000,
+                    radius,
+                    pg.Vector2(randrange(radius, WIDTH - radius), randrange(radius, HEIGHT - radius)),
+                    #pg.Vector2(randrange(-2000, 2000), randrange(-2000, 2000))
+                    pg.math.Vector2(0),
+                    pg.Color(randrange(0 , 255), randrange(0 , 255), randrange(0 , 255))
+                )
+            )
 
     def update(self, dt):
         for planet in self.planets:
             planet.calcUpdate(self.planets)
         for planet in self.planets:
             planet.applyUpdate(dt)
-
-    def add(self):
-        print('add new planet!')
-        randomMass = randrange(100)
-        randomRadius = randrange(50)
-        randomPosX = randrange(WIDTH)
-        randomPosY = randrange(HEIGHT)
-        randomVelocity = randrange(100)
-        newPlanet = Planet(randomMass, randomRadius, (randomPosX, randomPosY), (0, randomVelocity))
-        self.planets.append(newPlanet)
 
     def render(self, surf):
         for planet in self.planets:
